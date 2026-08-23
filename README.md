@@ -1,69 +1,85 @@
-# Python-Project-Management-CLI-Tool-Summative-Lab
+# Project Management CLI
 
-The Scenario: Create a Command-Line Project Management Tool 
-You are tasked with creating a command-line project management tool for a team of developers. The tool should allow administrators to manage users, projects, and tasks through structured CLI commands. The system must support:
+A command-line tool for managing team users, projects, tasks, and contributors.
+Data is saved to a local JSON file after every change.
 
-Create and list users via the command line.
-Add projects to specific users and display their associated projects.
-Assign tasks to projects and mark them as complete.
-Edit and persist project/task data using file I/O.
-Navigate the tool with clear, user-friendly CLI commands.
-Manage data relationships like one-to-many (users to projects) and many-to-many (projects to tasks with contributors).
-Create and manage users, projects, and tasks.
+## Features
 
-Design a CLI tool that enables:
+- Create and list users.
+- Add projects to users and filter projects by owner.
+- Add tasks to projects and assign multiple contributors.
+- Edit project and task details.
+- Mark tasks complete.
+- Validate emails, due dates, statuses, IDs, and duplicate users.
+- Display lists as readable tables using `tabulate`.
+- Recover cleanly from missing files and report malformed JSON.
 
-Admins to manage users and projects.
-Each user to have one or more projects.
-Each project to have one or more tasks.
-CLI commands to add, view, and update these entities.
+## Setup
 
-Classes: User, Project, Task
-Relationships:
-One-to-many: User -> Projects
-One-to-many: Project -> Tasks
-Attributes
-Users: name, email
-Projects: title, description, due_date
-Tasks: title, status, assigned_to
-File Structure
-main.py: CLI entry point
-models/: contains class definitions
-data/: local JSON or CSV file storage
-utils/: helper functions, custom hooks
-Persistence
-Use JSON for saving/loading users, projects, and tasks
-Package Setup:
-External dependencies listed in requirements.txt
+Python 3.10 or newer is recommended.
 
-Set Up CLI Entry
-Use argparse to define CLI structure.
-Implement subcommands like add-user, list-projects, and complete-task.
-Build Object Model
-Use classes for User, Project, and Task.
-Apply __init__, instance methods, and relationships.
-Use class methods to create or retrieve object collections.
-Implement __str__() or __repr__() for clean CLI output.
-Add OOP Features
-Use @property and setter methods to control access to attributes.
-Use class attributes (e.g., ID counters).
-Add inheritance where appropriate (e.g., Person → User).
-Configure File IO
-Save and load objects via JSON files.
-Handle missing files or malformed data with try-except.
-Use Python scripting best practices (if __name__ == "__main__").
-Use External Packages
-Install and use at least one PyPi package (e.g., rich, tabulate, typer).
-Track packages in requirements.txt.
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+```
 
-Add unit tests for your class methods and CLI logic.
-Test input/output interactions using mock data.
-Use print/logging/debugger to trace logic.
-Refactor large files into reusable modules.
+## Commands
 
-Comment on all class methods and utility functions.
-Create a README.md with:
-Setup instructions
-How to run CLI commands
-Overview of features and known issues
-Ensure all code is pushed to GitHub.
+Run commands from the repository root. Values containing spaces must be quoted.
+
+```bash
+# Users
+python main.py add-user "Ada Lovelace" ada@example.com
+python main.py list-users
+
+# Projects
+python main.py add-project 1 "CLI Tool" "Manage team work" 2026-12-01
+python main.py list-projects
+python main.py list-projects --user-id 1
+python main.py edit-project 1 --title "Project Manager" --due-date 2027-01-15
+
+# Tasks and contributors
+python main.py add-task 1 "Write tests" --assigned-to 1 2
+python main.py list-tasks
+python main.py list-tasks --project-id 1
+python main.py edit-task 1 --title "Write integration tests" --assigned-to 2
+python main.py complete-task 1
+```
+
+Use `python main.py --help` or `python main.py COMMAND --help` for built-in help.
+The optional `--data-file PATH` argument selects another JSON file and must come
+before the command:
+
+```bash
+python main.py --data-file data/demo.json list-users
+```
+
+## Data Model
+
+- `User` inherits shared name and email behavior from `Person`.
+- One user owns many projects.
+- One project contains many tasks.
+- A task stores multiple contributor user IDs, allowing users to contribute to
+	many tasks and tasks to have many contributors.
+- Class-level counters assign stable numeric IDs. Loading JSON advances the
+	counters so new records do not reuse persisted IDs.
+
+The default data file is `data/project_data.json`. Writes first go to a temporary
+file and are then moved into place to reduce the chance of partial JSON data.
+
+## Tests
+
+```bash
+python -m pytest
+```
+
+Tests cover model validation, relationships, JSON round trips, malformed files,
+CLI output, editing, contributor validation, and task completion.
+
+## Known Issues
+
+- This local tool has no authentication or permission roles.
+- Concurrent processes can overwrite each other's changes because there is no
+	file locking.
+- Deleting users, projects, and tasks is not currently supported.
